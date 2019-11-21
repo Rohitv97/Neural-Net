@@ -5,6 +5,7 @@
 #include<complex>
 #include<vector>
 #include<iostream>
+#include<fstream>
 using namespace std;
 
 const int hidden_neurons = 3;
@@ -23,8 +24,11 @@ public:
 	double netIn = 0;
 	double output;
 	double local_gradient;
-	double eta = 1;
-
+	double eta = 0.65;
+	double deltaweight1[2];
+	double deltaweight2[hidden_neurons];
+	double alpha = 0.2;
+	
 	void initWeight(int layer, int hidden_neurons)
 	{
 		float X = 1;
@@ -34,6 +38,7 @@ public:
 			{
 				float r1 = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / X));
 				w1[i] = r1 - 0;
+				deltaweight1[i] = 0;
 				cout << "Weights of hidden layer: " << w1[i] << endl;
 			}
 		}
@@ -43,6 +48,7 @@ public:
 			{
 				float r1 = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / X));
 				w2[i] = r1 - 0;
+				deltaweight2[i] = 0;
 				cout << "Weights of output layer: " << w2[i] << endl;
 			}
 		}
@@ -124,29 +130,28 @@ public:
 
 	void weightUpdate(int layer, vector<Neuron*> prevLayer)
 	{
-		double delta;
 		if(layer==1)
 		{
 			for(int i = 0; i < 2; i++)
 			{
-				delta = eta * local_gradient * prevLayer[i]->output;
-				w1[i] += delta;
-				/*
-				cout << "Delta W of hidden neurons: " << delta << endl;
-				cout << "New weight : " << w1[i] << endl;
-				*/
+				deltaweight1[i] = (eta * local_gradient * prevLayer[i]->output) + (alpha * deltaweight1[i]);
+				w1[i] += deltaweight1[i];
+				
+				//cout << "Delta W of hidden neurons: " << deltaweight1[i] << endl;
+				//cout << "New weight : " << w1[i] << endl;
+				
 			}
 		}
 		else if(layer==2)
 		{
 			for(int i = 0; i < hidden_neurons; i++)
 			{
-				delta = eta * local_gradient * prevLayer[i]->output;
-				w2[i] += delta;
-				/*
-				cout << "Delta W of output neurons: " << delta << endl;
-				cout << "New weight : " << w2[i] << endl;
-				*/
+				deltaweight2[i] = (eta * local_gradient * prevLayer[i]->output) + (alpha * deltaweight2[i]);
+				w2[i] += deltaweight2[i];
+				
+				//cout << "Delta W of output neurons: " << deltaweight2[i] << endl;
+				//cout << "New weight : " << w2[i] << endl;
+				
 			}
 		}
 	}
@@ -158,12 +163,15 @@ public:
 int main()
 {
 	srand(static_cast <unsigned> (time(0)));
+	Neuron x0, h0;
 	Neuron x1, x2, h1, h2, h3, y1, y2;
 	double x1n, x2n, h1n, h2n, h3n, y1n, y2n;
 	double x1o, x2o, h1o, h2o, h3o, y1o, y2o;
 
+	x0.initWeight(0, 3);
 	x1.initWeight(0, 3);
 	x2.initWeight(0, 3);
+	h0.initWeight(1, 3);
 	h1.initWeight(1, 3);
 	h2.initWeight(1, 3);
 	h3.initWeight(1, 3);
@@ -173,6 +181,10 @@ int main()
 	x1.Input();
 	x2.Input();
 
+	x0.output = 1;
+	h0.output = 1;
+
+	
 
 	double t1, t2;
 	cout << "Target output 1: ";
@@ -183,19 +195,24 @@ int main()
 
 	vector<Neuron*> inLayer;
 	//vector<Neuron>  inLayer;
+	//inLayer.push_back(&x0);
 	inLayer.push_back(&x1);
 	inLayer.push_back(&x2);
+	
 	vector<Neuron*> hidLayer;
+	//hidLayer.push_back(&h0);
 	hidLayer.push_back(&h1);
 	hidLayer.push_back(&h2);
 	hidLayer.push_back(&h3);
+	
 	vector<Neuron*> outLayer;
 	outLayer.push_back(&y1);
 	outLayer.push_back(&y2);
 
-	
 
 	
+
+	double err1=0.0, err2=0.0;
 
 	for(int epoch = 0; epoch < 100; epoch++)
 	{
@@ -209,12 +226,16 @@ int main()
 		cout << "Output of x1: " << x1o << endl;
 		cout << "Output of x2: " << x2o << endl;
 		*/
+
+
+		
 		h1n = h1.netInput(inLayer, 1);
 		h2n = h2.netInput(inLayer, 1);
 		h3n = h3.netInput(inLayer, 1);
 		h1o = h1.activation(h1n, 1);
 		h2o = h2.activation(h2n, 1);
 		h3o = h3.activation(h3n, 1);
+
 		/*
 		cout << "Output of h1: " << h1o << endl;
 		cout << "Output of h2: " << h2o << endl;
@@ -228,13 +249,13 @@ int main()
 		cout << "Output of y1: " << y1o << endl;
 		cout << "Output of y2: " << y2o << endl;
 		*/
-		double err1, err2;
+		
 
-		err1 = t1 - y1o;
+		err1 = (t1 - y1o);
 		cout << "Error 1 : " << err1 << endl;
 		y1.gradient(2, err1, outLayer, 0);
 
-		err2 = t2 - y2o;
+		err2 = (t2 - y2o);
 		cout << "Error 2 : " << err2 << endl;
 		y2.gradient(2, err2, outLayer, 1);
 
@@ -247,6 +268,7 @@ int main()
 		y1.weightUpdate(2, hidLayer);
 		y2.weightUpdate(2, hidLayer);
 
+		h0.weightUpdate(1, inLayer);
 		h1.weightUpdate(1, inLayer);
 		h2.weightUpdate(1, inLayer);
 		h3.weightUpdate(1, inLayer);
