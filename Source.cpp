@@ -1,11 +1,12 @@
-// NeuralNet.cpp : This file contains the 'main' function. Program execution begins and ends there.
+// RoNet.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
+
 #include "pch.h"
+#include <iostream>
 #include<cstdlib>
 #include<ctime>
 #include<complex>
 #include<vector>
-#include<iostream>
 #include<fstream>
 #include<math.h>
 using namespace std;
@@ -16,7 +17,6 @@ const int hidden_neurons = 3;
 class Neuron
 {
 public:
-
 	int layer;
 	double lambda = 0.6;
 	double w0;
@@ -157,9 +157,8 @@ public:
 			}
 		}
 	}
-
-
 };
+
 
 vector<vector<double>> readCSV()
 {
@@ -191,64 +190,57 @@ vector<vector<double>> readCSV()
 int main()
 {
 	srand(static_cast <unsigned> (time(0)));
-	Neuron x1, x2, h1, h2, h3, y1, y2;
-	double x1n, x2n, h1n, h2n, h3n, y1n, y2n;
-	double x1o, x2o, h1o, h2o, h3o, y1o, y2o;
+	double x1n, x2n, h1n, y1n, y2n;
+	double x1o, x2o, h1o, y1o, y2o;
 
-	//x0.initWeight(0, 3);
-	x1.initWeight(0, 3);
-	x2.initWeight(0, 3);
-	//h0.initWeight(1, 3);
-	h1.initWeight(1, 3);
-	h2.initWeight(1, 3);
-	h3.initWeight(1, 3);
-	y1.initWeight(2, 3);
-	y2.initWeight(2, 3);
-
-	//x1.Input();
-	//x2.Input();
-
-	//x0.output = 1;
-	//h0.output = 1;
+	Neuron x1, x2, y1, y2;
 
 	vector<Neuron*> inLayer;
-	//vector<Neuron>  inLayer;
-	//inLayer.push_back(&x0);
 	inLayer.push_back(&x1);
 	inLayer.push_back(&x2);
-
-	vector<Neuron*> hidLayer;
-	//hidLayer.push_back(&h0);
-	hidLayer.push_back(&h1);
-	hidLayer.push_back(&h2);
-	hidLayer.push_back(&h3);
 
 	vector<Neuron*> outLayer;
 	outLayer.push_back(&y1);
 	outLayer.push_back(&y2);
 
+	vector<Neuron*> hidLayer;
+	for (int i = 0; i < hidden_neurons; i++)
+	{
+		Neuron* h = new Neuron();
+		hidLayer.push_back(h);
+	}
+
+
+	x1.initWeight(0, 3);
+	x2.initWeight(0, 3);
+	for (int i = 0; i < hidLayer.size(); i++)
+	{
+		hidLayer[i]->initWeight(1, 3);
+	}
+	y1.initWeight(2, 3);
+	y2.initWeight(2, 3);
 
 	vector<vector<double>> alldata;
 	alldata = readCSV();
 
 	double temp_e1, temp_e2;
 
-	for (int epoch = 0; epoch < 100; epoch++)
+	for (int epoch = 0; epoch < 500; epoch++)
 	{
 		double err1 = 0.0, err2 = 0.0;
 		double me1 = 0.0, me2 = 0.0;
-		//cout << "---Epoch" << epoch + 1 << "----" << endl;
+
 		for (int i = 0; i < alldata.size(); i++)
 		{
 			//min range = 0, max range = 5000
-			x1.in1 = (alldata[i][0]/5000);
-			x2.in1 = (alldata[i][1]/5000);
+			x1.in1 = (alldata[i][0] / 5000);
+			x2.in1 = (alldata[i][1] / 5000);
 
 			double t1, t2;
 
 			//min speed = 0, max speed = 250
-			t1 = ((alldata[i][2])/250);
-			t2 = ((alldata[i][3])/250);
+			t1 = ((alldata[i][2]) / 250);
+			t2 = ((alldata[i][3]) / 250);
 
 			x1n = x1.netInput(inLayer, 0);
 			x2n = x2.netInput(inLayer, 0);
@@ -256,24 +248,16 @@ int main()
 			x2o = x2.activation(x2n, 0);
 
 			/*
-		cout << "Output of x1: " << x1o << endl;
-		cout << "Output of x2: " << x2o << endl;
-		*/
-
-
-
-			h1n = h1.netInput(inLayer, 1);
-			h2n = h2.netInput(inLayer, 1);
-			h3n = h3.netInput(inLayer, 1);
-			h1o = h1.activation(h1n, 1);
-			h2o = h2.activation(h2n, 1);
-			h3o = h3.activation(h3n, 1);
-
-			/*
-			cout << "Output of h1: " << h1o << endl;
-			cout << "Output of h2: " << h2o << endl;
-			cout << "Output of h3: " << h3o << endl;
+			cout << "Output of x1: " << x1o << endl;
+			cout << "Output of x2: " << x2o << endl;
 			*/
+
+			for (int j = 0; j < hidLayer.size(); j++)
+			{
+				h1n = hidLayer[j]->netInput(inLayer, 1);
+				h1o = hidLayer[j]->activation(h1n, 1);
+				//cout << "Output of h" << i+1 << ": " << h1o << endl;
+			}
 
 			y1n = y1.netInput(hidLayer, 2);
 			y2n = y2.netInput(hidLayer, 2);
@@ -297,31 +281,32 @@ int main()
 			//cout << "Error 2: " << err2 << endl;
 			y2.gradient(2, err2, outLayer, 1);
 
-
 			double err_h = 0.0;
 
-			h1.gradient(1, err_h, outLayer, 0);
-			h2.gradient(1, err_h, outLayer, 1);
-			h3.gradient(1, err_h, outLayer, 2);
+			for (int j = 0; j < hidLayer.size(); j++)
+			{
+				hidLayer[j]->gradient(1, err_h, outLayer, j);
+			}
 
 			y1.weightUpdate(2, hidLayer);
 			y2.weightUpdate(2, hidLayer);
 
-			h1.weightUpdate(1, inLayer);
-			h2.weightUpdate(1, inLayer);
-			h3.weightUpdate(1, inLayer);
+			for (int j = 0; j < hidLayer.size(); j++)
+			{
+				hidLayer[j]->weightUpdate(1, inLayer);
+			}
 
 		}
-		
+
 		me1 = me1 / alldata.size();
 		me2 = me2 / alldata.size();
 		me1 = sqrt(me1);
 		me2 = sqrt(me2);
 
-		double error = ((me1) + (me2))/2;
+		double error = ((me1)+(me2)) / 2;
 
 		cout << "Epoch " << epoch + 1 << " error: " << error << endl;
-			
+
 	}
 
 	ofstream model("model.txt");
@@ -348,10 +333,9 @@ int main()
 	}
 
 
-
-
 	return 0;
 }
+
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
 // Debug program: F5 or Debug > Start Debugging menu
 
