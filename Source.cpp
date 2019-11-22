@@ -2,7 +2,7 @@
 //
 
 #include "pch.h"
-#include <iostream>
+#include<iostream>
 #include<cstdlib>
 #include<ctime>
 #include<complex>
@@ -186,6 +186,63 @@ vector<vector<double>> readCSV()
 	return alldata;
 }
 
+void model_save(vector<Neuron*> hidLayer, vector<Neuron*> outLayer)
+{
+	ofstream model("model.txt");
+	if (model.is_open())
+	{
+		for (unsigned int i = 0; i < hidLayer.size(); i++)
+		{
+			for (int j = 0; j < 2; j++)
+			{
+				double weight = hidLayer[i]->w1[j];
+				model << weight << "\n";
+			}
+		}
+
+		for (unsigned int i = 0; i < outLayer.size(); i++)
+		{
+			for (int j = 0; j < hidden_neurons; j++)
+			{
+				double weight = outLayer[i]->w2[j];
+				model << weight << "\n";
+			}
+		}
+		model.close();
+	}
+	cout << "Model has been exported" << endl;
+}
+
+void model_load(vector<Neuron*> hidLayer, vector<Neuron*> outLayer)
+{
+	ifstream model("model.txt");
+	string line;
+	double value;
+
+	for (unsigned int i = 0; i < hidLayer.size(); i++)
+	{
+		for (int j = 0; j < 2; j++)
+		{
+			getline(model, line);
+			value = stod(line);
+			hidLayer[i]->w1[j] = value;
+			//cout << hidLayer[i]->w1[j] << endl;
+
+		}
+	}
+
+	for (unsigned int i = 0; i < outLayer.size(); i++)
+	{
+		for (int j = 0; j < hidden_neurons; j++)
+		{
+			getline(model, line);
+			value = stod(line);
+			outLayer[i]->w2[j] = value;
+			//cout << outLayer[i]->w2[j] << endl;
+		}
+	}
+}
+
 
 int main()
 {
@@ -194,6 +251,8 @@ int main()
 	double x1o, x2o, h1o, y1o, y2o;
 
 	Neuron x1, x2, y1, y2;
+
+	//Neuron b1, b2;
 
 	vector<Neuron*> inLayer;
 	inLayer.push_back(&x1);
@@ -213,7 +272,7 @@ int main()
 
 	x1.initWeight(0, 3);
 	x2.initWeight(0, 3);
-	for (int i = 0; i < hidLayer.size(); i++)
+	for (unsigned int i = 0; i < hidLayer.size(); i++)
 	{
 		hidLayer[i]->initWeight(1, 3);
 	}
@@ -225,12 +284,12 @@ int main()
 
 	double temp_e1, temp_e2;
 
-	for (int epoch = 0; epoch < 500; epoch++)
+	for (int epoch = 0; epoch < 100; epoch++)
 	{
 		double err1 = 0.0, err2 = 0.0;
 		double me1 = 0.0, me2 = 0.0;
 
-		for (int i = 0; i < alldata.size(); i++)
+		for (unsigned int i = 0; i < alldata.size(); i++)
 		{
 			//min range = 0, max range = 5000
 			x1.in1 = (alldata[i][0] / 5000);
@@ -252,7 +311,7 @@ int main()
 			cout << "Output of x2: " << x2o << endl;
 			*/
 
-			for (int j = 0; j < hidLayer.size(); j++)
+			for (unsigned int j = 0; j < hidLayer.size(); j++)
 			{
 				h1n = hidLayer[j]->netInput(inLayer, 1);
 				h1o = hidLayer[j]->activation(h1n, 1);
@@ -283,7 +342,7 @@ int main()
 
 			double err_h = 0.0;
 
-			for (int j = 0; j < hidLayer.size(); j++)
+			for (unsigned int j = 0; j < hidLayer.size(); j++)
 			{
 				hidLayer[j]->gradient(1, err_h, outLayer, j);
 			}
@@ -291,7 +350,7 @@ int main()
 			y1.weightUpdate(2, hidLayer);
 			y2.weightUpdate(2, hidLayer);
 
-			for (int j = 0; j < hidLayer.size(); j++)
+			for (unsigned int j = 0; j < hidLayer.size(); j++)
 			{
 				hidLayer[j]->weightUpdate(1, inLayer);
 			}
@@ -309,29 +368,51 @@ int main()
 
 	}
 
-	ofstream model("model.txt");
-	if (model.is_open())
-	{
-		for (int i = 0; i < hidLayer.size(); i++)
-		{
-			for (int j = 0; j < 2; j++)
-			{
-				double weight = hidLayer[i]->w1[j];
-				model << weight << "\n";
-			}
-		}
+	model_save(hidLayer, outLayer);
 
-		for (int i = 0; i < outLayer.size(); i++)
-		{
-			for (int j = 0; j < hidden_neurons; j++)
-			{
-				double weight = outLayer[i]->w2[j];
-				model << weight << "\n";
-			}
-		}
-		model.close();
+	inLayer.clear();
+	hidLayer.clear();
+	outLayer.clear();
+
+
+	/////////////////// Lets try loading the model to predict something!!!!!///////////
+	/*
+	model_load(hidLayer, outLayer);
+
+	//vector<Neuron*> inLayer;
+	inLayer.push_back(&x1);
+	inLayer.push_back(&x2);
+
+	//vector<Neuron*> outLayer;
+	outLayer.push_back(&y1);
+	outLayer.push_back(&y2);
+
+	//vector<Neuron*> hidLayer;
+	for (int i = 0; i < hidden_neurons; i++)
+	{
+		Neuron* h = new Neuron();
+		hidLayer.push_back(h);
 	}
 
+	x1.initWeight(0, 3);
+	x2.initWeight(0, 3);
+
+	model_load(hidLayer, outLayer);
+	for (int i = 0; i < hidLayer.size(); i++)
+	{
+		for (int j = 0; j < 2; j++)
+		{
+			cout << hidLayer[i]->w1[j] << endl;
+		}
+	}
+	for (int i = 0; i < outLayer.size(); i++)
+	{
+		for (int j = 0; j < hidden_neurons; j++)
+		{
+			cout << outLayer[i]->w2[j] << endl;
+		}
+	}
+	*/
 
 	return 0;
 }
