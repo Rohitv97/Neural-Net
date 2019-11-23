@@ -1,7 +1,7 @@
 // AriaNet.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
-#include "pch.h"
+//#include "pch.h"
 #include "aria.h"
 #include <iostream>
 #include<stdlib.h>
@@ -163,7 +163,7 @@ public:
 
 void model_load(vector<Neuron*> hidLayer, vector<Neuron*> outLayer)
 {
-	ifstream model("model.txt");
+	ifstream model("model_3_500.txt");
 	string line;
 	double value;
 
@@ -244,7 +244,7 @@ int main(int argc, char **argv)
 	double x1o, x2o, h1o, y1o, y2o;
 
 
-	robot.setVel2(100, 100);
+	robot.setVel2(50, 50);
 
 	while (true)
 	{
@@ -272,8 +272,8 @@ int main(int argc, char **argv)
 		rfs = min(rfs, v34);
 
 
-		x1.in1 = (rbs/5000);
-		x2.in1 = (rfs/5000);
+		x1.in1 = (rbs / 5000);
+		x2.in1 = (rfs / 5000);
 
 		x1n = x1.netInput(inLayer, 0);
 		x2n = x2.netInput(inLayer, 0);
