@@ -273,17 +273,78 @@ int main(int argc, char **argv)
 			sonarSensor[i] = robot.getSonarReading(i);
 			sonarRange[i] = sonarSensor[i]->getRange();
 		}
+		
+		double min0 = sonarRange[0];
 
-		int val0 = sonarRange[0];
-		int val1 = sonarRange[1];
-		int val2 = sonarRange[2];
-		int val3 = sonarRange[3];
-		int val4 = sonarRange[4];
-		int val5 = sonarRange[5];
+		for (int i = 0; i < 5; i++)
+		{
+			double val0 = robot.getSonarReading(0)->getRange();
+			if (min0 > val0)
+			{
+				min0 = val0;
+			}
+		}
 
-		double rbs = min(val0, val1);
-		double v34 = (val3 + val4) / 2;
-		double rfs = min(val2, val5);
+		double min1 = sonarRange[1];
+
+		for (int i = 0; i < 5; i++)
+		{
+			double val1 = robot.getSonarReading(1)->getRange();
+			if (min1 > val1)
+			{
+				min1 = val1;
+			}
+		}
+
+		double min2 = sonarRange[2];
+
+		for (int i = 0; i < 5; i++)
+		{
+			double val2 = robot.getSonarReading(2)->getRange();
+			if (min2 > val2)
+			{
+				min2 = val2;
+			}
+		}
+
+		double min3 = sonarRange[3];
+
+		for (int i = 0; i < 5; i++)
+		{
+			double val3 = robot.getSonarReading(3)->getRange();
+			if (min3 > val3)
+			{
+				min3 = val3;
+			}
+		}
+
+		double min4 = sonarRange[4];
+
+		for (int i = 0; i < 5; i++)
+		{
+			double val4 = robot.getSonarReading(4)->getRange();
+			if (min4 > val4)
+			{
+				min4 = val4;
+			}
+		}
+
+		double min5 = sonarRange[5];
+
+		for (int i = 0; i < 5; i++)
+		{
+			double val5 = robot.getSonarReading(5)->getRange();
+			if (min5 > val5)
+			{
+				min5 = val5;
+			}
+		}
+		
+		
+
+		double rbs = min(min0, min1);
+		double v34 = (min3 + min4) / 2;
+		double rfs = min(min2, min5);
 		rfs = min(rfs, v34);
 
 
