@@ -11,9 +11,9 @@
 using namespace std;
 
 const int hidden_neurons = 3;
-const double lambda = 0.6;
-const double eta = 0.65;
-const double alpha = 0.1;
+const double lambda = 0.85;
+const double eta = 0.9;
+const double alpha = 0.7;
 
 class Neuron
 {
@@ -283,7 +283,7 @@ int main(int argc, char **argv)
 
 		double rbs = min(val0, val1);
 		double v34 = (val3 + val4) / 2;
-		double rfs = min(val3, val5);
+		double rfs = min(val2, val5);
 		rfs = min(rfs, v34);
 
 
