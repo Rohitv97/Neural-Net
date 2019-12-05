@@ -8,13 +8,19 @@
 #include<vector>
 #include<fstream>
 #include<math.h>
+#include<algorithm>
 using namespace std;
 
-const int hidden_neurons = 3;
-const double lambda = 0.6;
-const double eta = 0.65;
-const double alpha = 0.1;
+/*const int hidden_neurons = 3;
+const double lambda = 0.85;
+const double eta = 0.9;
+const double alpha = 0.7;
+*/
 
+const int hidden_neurons = 5;
+const double lambda = 0.8;
+const double eta = 0.7;
+const double alpha = 0.9;
 class Neuron
 {
 public:
@@ -172,7 +178,7 @@ vector<vector<double>> readCSV()
 	vector<double> row;
 	vector <vector<double>> alldata;
 
-	ifstream file("training.csv");
+	ifstream file("train.csv");
 	string line, word;
 	getline(file, line);
 
@@ -191,6 +197,32 @@ vector<vector<double>> readCSV()
 	}
 
 	return alldata;
+}
+
+vector<vector<double>> read_Val_CSV()
+{
+	vector<double> row;
+	vector <vector<double>> allVdata;
+
+	ifstream file("valid.csv");
+	string line, word;
+	getline(file, line);
+
+	while (getline(file, line))
+	{
+		row.clear();
+
+		stringstream ss(line);
+
+		while (getline(ss, word, ','))
+		{
+			row.push_back(stod(word));
+		}
+
+		allVdata.push_back(row);
+	}
+
+	return allVdata;
 }
 
 void model_save(vector<Neuron*> hidLayer, vector<Neuron*> outLayer)
@@ -298,12 +330,25 @@ int main()
 	vector<vector<double>> alldata;
 	alldata = readCSV();
 
+	vector<vector<double>> allVdata;
+	allVdata = read_Val_CSV();
+
+	
+
 	double temp_e1, temp_e2;
 
-	for (int epoch = 0; epoch < 500; epoch++)
+	string tfile = "perf_train.txt";
+	string vfile = "perf_validation.txt";
+
+	vector<double> overallTErr;
+	vector<double> overallVErr;
+
+	for (int epoch = 0; epoch < 600; epoch++)
 	{
 		double err1 = 0.0, err2 = 0.0;
 		double me1 = 0.0, me2 = 0.0;
+
+		random_shuffle(alldata.begin(), alldata.end());
 
 		for (unsigned int i = 0; i < alldata.size(); i++)
 		{
@@ -381,10 +426,107 @@ int main()
 		me1 = sqrt(me1);
 		me2 = sqrt(me2);
 
-		double error = ((me1)+(me2)) / 2;
+		double error;
 
+		error = ((me1*me1) + (me2*me2)) / 2;
+		error = sqrt(error);
+		
 		cout << "Epoch " << epoch + 1 << " error: " << error << endl;
 
+		overallTErr.push_back(error);
+
+		err1 = 0.0; err2 = 0.0;
+		me1 = 0.0; me2 = 0.0;
+
+		//random_shuffle(allVdata.begin(), allVdata.end());
+		
+		for (unsigned int i = 0; i < allVdata.size(); i++)
+		{
+			//min range = 0, max range = 5000
+			x1.in1 = (allVdata[i][0] / 5000);
+			x2.in1 = (allVdata[i][1] / 5000);
+
+			double t1, t2;
+
+			//min speed = 0, max speed = 250
+			t1 = ((allVdata[i][2]) / 250);
+			t2 = ((allVdata[i][3]) / 250);
+
+			x1n = x1.netInput(inLayer, 0);
+			x2n = x2.netInput(inLayer, 0);
+			x1o = x1.activation(x1n, 0);
+			x2o = x2.activation(x2n, 0);
+
+			/*
+			cout << "Output of x1: " << x1o << endl;
+			cout << "Output of x2: " << x2o << endl;
+			*/
+
+			for (unsigned int j = 0; j < hidLayer.size(); j++)
+			{
+				h1n = hidLayer[j]->netInput(inLayer, 1);
+				h1o = hidLayer[j]->activation(h1n, 1);
+				//cout << "Output of h" << i+1 << ": " << h1o << endl;
+			}
+
+			y1n = y1.netInput(hidLayer, 2);
+			y2n = y2.netInput(hidLayer, 2);
+			y1o = y1.activation(y1n, 2);
+			y2o = y2.activation(y2n, 2);
+
+			/*
+			cout << "Output of y1: " << y1o << endl;
+			cout << "Output of y2: " << y2o << endl;
+			*/
+
+			temp_e1 = ((t1 - y1o) * (t1 - y1o));
+			me1 += temp_e1;
+			err1 = (t1 - y1o);
+			//cout << "Error 1: " << err1 << endl;
+			y1.gradient(2, err1, outLayer, 0);
+
+			temp_e2 = ((t2 - y2o) * (t2 - y2o));
+			me2 += temp_e2;
+			err2 = (t2 - y2o);
+			//cout << "Error 2: " << err2 << endl;
+
+		}
+
+		me1 = me1 / alldata.size();
+		me2 = me2 / alldata.size();
+		me1 = sqrt(me1);
+		me2 = sqrt(me2);
+
+		error = ((me1*me1)+(me2*me2)) / 2;
+		error = sqrt(error);
+
+		cout << "Epoch " << epoch + 1 << " Validation error: " << error << endl;
+
+		overallVErr.push_back(error);
+		
+
+	}
+
+	ofstream file(tfile);
+	if (file.is_open())
+	{
+		for (int num = 0; num < overallTErr.size(); num++)
+		{
+			file << overallTErr[num] << "\n";
+		}
+		file.close();
+		overallTErr.clear();
+	}
+
+	ofstream file1(vfile);
+	if (file1.is_open())
+	{
+		for (int num = 0; num < overallVErr.size(); num++)
+		{
+			file1 << overallVErr[num] << "\n";
+		}
+		file1.close();
+		overallVErr.clear();
 	}
 
 	model_save(hidLayer, outLayer);
