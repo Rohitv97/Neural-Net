@@ -353,14 +353,14 @@ int main(int argc, char **argv)
 			}
 		}
 		
-		
+		//min1 = min1 * cos((40 * 180) / M_PI);
 
 		double rbs = min(min0, min1);
 		//double v34 = (min3 + min4) / 2;
-		double v34 = min(min3, min4);
+		//double v34 = min(min3, min4);
 		//double rfs = min(min2, min5);
-		double rfs = min(v34, min2);
-		rfs = v34;
+		double rfs = min(min3, min2);
+		//rfs = v34;
 
 
 		x1.in1 = (rbs / 5000);
