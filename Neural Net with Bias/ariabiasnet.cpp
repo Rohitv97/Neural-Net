@@ -10,11 +10,24 @@
 #include<math.h>
 using namespace std;
 
-const int hidden_neurons = 3;
+
+/*const int hidden_neurons = 3;
 const double lambda = 0.85;
 const double eta = 0.9;
 const double alpha = 0.7;
+*/
 
+const int hidden_neurons = 5;
+const double lambda = 0.8;
+const double eta = 0.7;
+const double alpha = 0.9;
+
+/*
+const int hidden_neurons = 5;
+const double lambda = 0.8;
+const double eta = 0.8;
+const double alpha = 0.9;
+*/
 class Neuron
 {
 public:
@@ -343,9 +356,11 @@ int main(int argc, char **argv)
 		
 
 		double rbs = min(min0, min1);
-		double v34 = (min3 + min4) / 2;
-		double rfs = min(min2, min5);
-		rfs = min(rfs, v34);
+		//double v34 = (min3 + min4) / 2;
+		double v34 = min(min3, min4);
+		//double rfs = min(min2, min5);
+		double rfs = min(v34, min2);
+		rfs = v34;
 
 
 		x1.in1 = (rbs / 5000);
